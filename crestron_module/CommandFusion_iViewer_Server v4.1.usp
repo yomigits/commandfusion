@@ -351,13 +351,3 @@ SOCKETDISCONNECT CommandServer {
 SOCKETSTATUS CommandServer {
     CommandSocketStatus = SocketGetStatus();
 }
-
-/*
-Function Main() {
-	if (WaitForInitializationComplete() < 0) {
-		DebugLogLine("Error waiting for initialization complete");
-		return;
-	}
-	AccessGranted = 0;
-}
-*/
