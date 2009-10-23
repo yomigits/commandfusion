@@ -123,7 +123,7 @@ FUNCTION ProcessCommands(String CommandRequest) {
 	// Wait for any list data being sent to finish sending so we dont interrupt it
 	// (list data can be quite long and require sending a few packets)
 	While (UpdatingList) {
-		Wait(1);
+		Delay(1);
 	}
 	
 	Request = CommandRequest;

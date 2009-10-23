@@ -14,6 +14,17 @@ This example allows for generating a list of rooms, with the following items in 
 - digital join for the light state.
 
 Pressing the list item will pulse the corresponding 'RoomSelect' digital output
+    
+UpdateList Digital Input:
+-------------------------
+The list data will be sent on the rising edge of this input.
+This digital input must be held high to allow RoomState inputs to update the list.
+
+RoomState Digital Inputs:
+-------------------------
+These inputs will change the state of digital join 2 in the list rows.
+These inputs only have effect when UpdateList input is held high.
+
 #HELP_END
 
 #SYMBOL_NAME "CommandFusion iViewer List Processor - Room Lighting"
@@ -131,9 +142,17 @@ FUNCTION ProcessCommands(String CommandRequest) {
 PUSH updateList {
 	INTEGER index, Value, i, j;
 	STRING updateMsg[9999];
+
+	// Tell iViewer Module we are updating the list
+	UpdatingList_fb = 1;
+	// Ensure updating has been set before starting to send data
+	ProcessLogic();	
+
     
    	// Build the list message, clearing the list first using 0x command, then sending new list contents
-    updateMsg = "l" + ITOA(ListJoin) + "=0x\x03l" + ITOA(ListJoin) + "=";
+    list_tx$ = "l" + ITOA(ListJoin) + "=0x\x03";
+
+	updateMsg = "l" + ITOA(ListJoin) + "=";
 	FOR (i = 1 TO 20) {
 		if (RoomName$[i] <> "") {
 			updateMsg = updateMsg + ITOA(i - 1) + "c\x1Es1=" + RoomName$[i] + "\x1Ed1=0\x1Ed2=" + ITOA(RoomState[i]) + "\x0D";
@@ -141,17 +160,14 @@ PUSH updateList {
 	}
 	updateMsg = updateMsg + "\x03";
 
-	// Tell iViewer Module we are updating the list
-	UpdatingList_fb = 1;
-
 	// Ensure only 255 characters or less are sent out each time, SIMPL Serial limitation
 	While(LEN(updateMsg) > 200) {
 		list_tx$ = REMOVEBYLENGTH(200, updateMsg);
-		wait(10);
 	}
 	if (LEN(updateMsg) <> 0) {
 		list_tx$ = updateMsg;
 	}
+	ProcessLogic();
 
 	// Tell iViewer module we have finished updating the list
 	UpdatingList_fb = 0;
@@ -190,10 +206,13 @@ CHANGE list_rx$ {
 
 CHANGE RoomState {
 	Integer index;
-
-    // Which room state changed?
-	index = GetLastModifiedArrayIndex();
-
-	// Update the light status for the room in the list
-	list_tx$ = "l" + ITOA(ListJoin) + "=" + ITOA(index - 1) + "c\x1Ed2=" + ITOA(RoomState[index]) + "\x0D\x03";
+                                
+	// Only allow state change to show in list if this list is active
+	if (UpdateList) {
+		// Which room state changed?
+		index = GetLastModifiedArrayIndex();
+	
+		// Update the light status for the room in the list
+		list_tx$ = "l" + ITOA(ListJoin) + "=" + ITOA(index - 1) + "c\x1Ed2=" + ITOA(RoomState[index]) + "\x0D\x03";
+	}
 }
