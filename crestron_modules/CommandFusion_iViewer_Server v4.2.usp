@@ -104,28 +104,32 @@ String_Function InitializeFeedback() {
 	Return (Response);
 }
 
-FUNCTION SendFeedback(STRING theMsg) {
+FUNCTION SendFeedback(STRING theMsg, INTEGER containsListData) {
 	SIGNED_INTEGER status;
+
+	// Wait for any list data being sent to finish sending so we dont interrupt it
+	// (list data can be quite long and require sending a few packets)
+	While (UpdatingList && !containsListData) {
+		ProcessLogic();
+	}
 
 	if (CommandServer.SocketStatus = 2) {
 		status = SocketSend(CommandServer, theMsg);
+		Debug = "SEND: " + theMsg;
+		DebugLogLine(Debug);
 		if (status < 0) {
 			Debug = "Error sending to iViewer: " + ITOA(status);
 			DebugLogLine(Debug);
 		}
+	} ELSE {
+		Trace("Cannot send when socket status = %d", CommandServer.SocketStatus);
 	}
 }
 
 FUNCTION ProcessCommands(String CommandRequest) {
 	
 	String Response[1024], CommandType[1], Join[10], Value[255], Request[1024], Trash[1];
-            
-	// Wait for any list data being sent to finish sending so we dont interrupt it
-	// (list data can be quite long and require sending a few packets)
-	While (UpdatingList) {
-		Delay(1);
-	}
-	
+            	
 	Request = CommandRequest;
 
 	// Get command type (d, a, s)
@@ -133,7 +137,7 @@ FUNCTION ProcessCommands(String CommandRequest) {
 	if (CommandType = "i") {
 		if (AccessGranted) {
 			// Initialize request
-			SendFeedback(InitializeFeedback());
+			SendFeedback(InitializeFeedback(), 0);
 			// use remaining response as value
 			Value = RemoveByLength(LEN(Request), Request);
 		}
@@ -148,7 +152,7 @@ FUNCTION ProcessCommands(String CommandRequest) {
 		Value = RemoveByLength(LEN(Request), Request);
 		if (Value = "0") {
 			Response = "h=1\x03";
-			SendFeedback(Response);
+			SendFeedback(Response, 0);
 		}
 	} else if (CommandType = "p") {
 		// Password received
@@ -169,7 +173,7 @@ FUNCTION ProcessCommands(String CommandRequest) {
 		} else {
 			Response = "p=bad\x03";
 		}
-		SendFeedback(Response);
+		SendFeedback(Response, 0);
 	} else if (CommandType = "m") {
 		// Orientation change
 		// Remove the equals sign
@@ -235,8 +239,8 @@ FUNCTION ProcessCommands(String CommandRequest) {
 }
 
 PUSH RequestVersion {
-	SendFeedback("d10001=1");
-	SendFeedback("d10001=0");
+	SendFeedback("d10001=1", 0);
+	SendFeedback("d10001=0", 0);
 }
 
 CHANGE fb {
@@ -245,7 +249,7 @@ CHANGE fb {
 
 	index = GetLastModifiedArrayIndex();
    	Response = "d" + ITOA(index) + "=" + ITOA(fb[index]) + "\x03";
-	SendFeedback(Response);
+	SendFeedback(Response, 0);
 }
 
 CHANGE an_fb {
@@ -255,7 +259,7 @@ CHANGE an_fb {
 	index = GetLastModifiedArrayIndex();
 	Value = an_fb[index];
 	Response = "a" + ITOA(index) + "=" + ITOA(Value) + "\x03";
-	SendFeedback(Response);
+	SendFeedback(Response, 0);
 }
 
 CHANGE text_o {
@@ -270,12 +274,12 @@ CHANGE text_o {
 		Response = "s" + ITOA(index) + "=" + text_o[index] + "\x03";
 		text_o_store[index] = text_o[index];
 	}
-	SendFeedback(Response);
+	SendFeedback(Response, 0);
 }
 
 CHANGE list_tx$ {
 	//Trace("Pass through list data");
-	SendFeedback(list_tx$);
+	SendFeedback(list_tx$, 1);
 }
 
 PUSH EnableConnections {
@@ -300,15 +304,15 @@ RELEASE EnableConnections {
 }
 
 PUSH SystemBarToggle {
-	SendFeedback("d17922=1\x03");
+	SendFeedback("d17922=1\x03", 0);
 }
 
 PUSH SystemBarShow {
-	SendFeedback("d17931=1\x03");
+	SendFeedback("d17931=1\x03", 0);
 }
 
 PUSH SystemBarHide {
-	SendFeedback("d17932=0\x03");
+	SendFeedback("d17932=0\x03", 0);
 }
 
 // CONNECTIONS

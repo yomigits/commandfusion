@@ -44,10 +44,10 @@ INTEGER_PARAMETER ListJoin;
 STRING_PARAMETER DUMMY[20], RoomName$[20][50];
 
 #BEGIN_PARAMETER_PROPERTIES RoomName$
-   propValidUnits= unitString;
-   propDefaultUnit=unitString;
-   propDefaultValue="";
-   propShortDescription= "Enter a name for each room.";
+	propValidUnits= unitString;
+	propDefaultUnit=unitString;
+	propDefaultValue="";
+	propShortDescription= "Enter a name for each room.";
 #BEGIN_PROP_FULL_DESCRIPTION 
 Enter the name of each room.
 The name will be displayed on serial join 1 within a list content subpage.
@@ -55,34 +55,22 @@ The name will be displayed on serial join 1 within a list content subpage.
 #END_PARAMETER_PROPERTIES
 
 #BEGIN_PARAMETER_PROPERTIES ListJoin
-   propValidUnits= unitDecimal;
-   propDefaultUnit=unitDecimal;
-   propDefaultValue=1d;
-   propShortDescription= "Enter the lists analog join number.";
+	propValidUnits= unitDecimal;
+	propDefaultUnit=unitDecimal;
+	propDefaultValue=1d;
+	propShortDescription= "Enter the lists analog join number.";
 #BEGIN_PROP_FULL_DESCRIPTION 
 Enter the analog join number for the list.
 This is the join number assigned to the list within guiDesigner that you want to associate the list contents with.
 #END_PROP_FULL_DESCRIPTION
 #END_PARAMETER_PROPERTIES
-     
 
 #BEGIN_PARAMETER_PROPERTIES DUMMY
-   propValidUnits= unitString;
-   propDefaultUnit=unitString;
-   propDefaultValue="DUMMY PARAM";
-   propShortDescription= "Parameter does nothing, DO NOT USE!";
+	propValidUnits= unitString;
+	propDefaultUnit=unitString;
+	propDefaultValue="DUMMY PARAM";
+	propShortDescription= "Parameter does nothing, DO NOT USE!";
 #END_PARAMETER_PROPERTIES
-             
-String Debug[100];
-
-/*
-FUNCTION DebugLogLine(String msg) {
-	if (DebugMode) {
-		Print("\n[%s] %s", TIME(), msg);
-	}
-	Debug = "";
-}
-*/
 
 FUNCTION ProcessCommands(String CommandRequest) {
     Integer Join, Value, ListItem;
@@ -147,12 +135,9 @@ PUSH updateList {
 	UpdatingList_fb = 1;
 	// Ensure updating has been set before starting to send data
 	ProcessLogic();	
-
     
-   	// Build the list message, clearing the list first using 0x command, then sending new list contents
-    list_tx$ = "l" + ITOA(ListJoin) + "=0x\x03";
-
-	updateMsg = "l" + ITOA(ListJoin) + "=";
+	// Build the list message, clearing the list first using 0x command, then sending new list contents
+	updateMsg = "l" + ITOA(ListJoin) + "=0x\x03l" + ITOA(ListJoin) + "=";
 	FOR (i = 1 TO 20) {
 		if (RoomName$[i] <> "") {
 			updateMsg = updateMsg + ITOA(i - 1) + "c\x1Es1=" + RoomName$[i] + "\x1Ed1=0\x1Ed2=" + ITOA(RoomState[i]) + "\x0D";
@@ -163,11 +148,12 @@ PUSH updateList {
 	// Ensure only 255 characters or less are sent out each time, SIMPL Serial limitation
 	While(LEN(updateMsg) > 200) {
 		list_tx$ = REMOVEBYLENGTH(200, updateMsg);
+		Delay(10);
 	}
 	if (LEN(updateMsg) <> 0) {
 		list_tx$ = updateMsg;
+		ProcessLogic();
 	}
-	ProcessLogic();
 
 	// Tell iViewer module we have finished updating the list
 	UpdatingList_fb = 0;
