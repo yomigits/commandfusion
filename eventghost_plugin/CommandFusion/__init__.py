@@ -121,26 +121,38 @@ class AnalogChange(eg.ActionBase):
     class text:
         label = "Analog Join Number:"
         value = "Analog Value (0-65535):"
+        minvalue = "Minimum Value:"
+        maxvalue = "Maximum Value:"
         
-    def __call__(self, joinNum, Value="0"):
-        self.plugin.Push("a%s=%s\x03" % (joinNum, Value))
+    def __call__(self, joinNum, Value="0", minVal="0", maxVal="65535"):
+        val = eg.ParseString(Value)
+        val = str(round(float(65535 / float(maxVal) - float(minVal)) * float(val)))
+        self.plugin.Push("a%s=%s\x03" % (joinNum, val))
                
             
-    def Configure(self, joinNum="1", Value="0"):
+    def Configure(self, joinNum="1", Value="0", minVal="0", maxVal="65535"):
         panel = eg.ConfigPanel()
         st1 = panel.StaticText(self.text.label)
         st2 = panel.StaticText(self.text.value)
+        st3 = panel.StaticText(self.text.minvalue)
+        st4 = panel.StaticText(self.text.maxvalue)
         eg.EqualizeWidths((st1, st2))
-        valCtrl = panel.SpinIntCtrl(Value, min=0, max=65535)
+        valCtrl = panel.TextCtrl(Value)
         textCtrl = panel.SpinIntCtrl(joinNum, min=1, max=9999)
-        mySizer = wx.FlexGridSizer(rows=5)
-        mySizer.Add(st1, 0, wx.EXPAND|wx.ALL, 5)
-        mySizer.Add(textCtrl, 0, wx.EXPAND|wx.ALL, 5)
-        mySizer.Add(st2, 0, wx.EXPAND|wx.ALL, 5)
-        mySizer.Add(valCtrl, 0, wx.EXPAND|wx.ALL, 5)
+        minvalCtrl = panel.TextCtrl(minVal)
+        maxvalCtrl = panel.TextCtrl(maxVal)
+        mySizer = wx.FlexGridSizer(rows=8)
+        mySizer.Add(st1, 0, wx.EXPAND|wx.ALL, 8)
+        mySizer.Add(textCtrl, 0, wx.EXPAND|wx.ALL, 8)
+        mySizer.Add(st2, 0, wx.EXPAND|wx.ALL, 8)
+        mySizer.Add(valCtrl, 0, wx.EXPAND|wx.ALL, 8)
+        mySizer.Add(st3, 0, wx.EXPAND|wx.ALL, 8)
+        mySizer.Add(minvalCtrl, 0, wx.EXPAND|wx.ALL, 8)
+        mySizer.Add(st4, 0, wx.EXPAND|wx.ALL, 8)
+        mySizer.Add(maxvalCtrl, 0, wx.EXPAND|wx.ALL, 8)
         panel.sizer.Add(mySizer)
         while panel.Affirmed():
-            panel.SetResult(textCtrl.GetValue(), valCtrl.GetValue())
+            panel.SetResult(textCtrl.GetValue(), valCtrl.GetValue(), minvalCtrl.GetValue(), maxvalCtrl.GetValue())
             
 
 

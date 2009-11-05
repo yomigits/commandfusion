@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<EventGhost Name="Configuration Tree" Expanded="True" Version="1030" Guid="{467C9880-7EE7-4EF4-954D-3923FA6D9363}" Time="1257007149.4">
+<EventGhost Name="Configuration Tree" Expanded="True" Version="1030" Guid="{9ABC06DF-7561-47D4-8D25-5FFC4D304138}" Time="1257464684.04">
     <Autostart Name="Autostart" Expanded="True">
         <Plugin File="CommandFusion" Identifier="CommandFusion">
             gAJNVB9YAAAAAHEAiIdxAS4=
@@ -75,13 +75,13 @@
                 EventGhost.PythonScript(u"\ndef SendArrowLeft():\n    if eg.globals.ArrowRelease == 0:\n        eg.plugins.Window.SendKeys(u'{Left}', False)\n        eg.globals.ArrowTask = eg.scheduler.AddTask(0.3, SendArrowLeft)\n\neg.globals.ArrowRelease = 0\neg.plugins.Window.SendKeys(u'{Left}', False)\neg.globals.ArrowTask = eg.scheduler.AddTask(0.5, SendArrowLeft)")
             </Action>
         </Macro>
-        <Macro Name="Right Arrow" Expanded="True">
+        <Macro Name="Right Arrow">
             <Event Name="CommandFusion.DigitalPress_25" />
             <Action Name="Press &amp; Hold">
                 EventGhost.PythonScript(u"\ndef SendArrowRight():\n    if eg.globals.ArrowRelease == 0:\n        eg.plugins.Window.SendKeys(u'{Right}', False)\n        eg.globals.ArrowTask = eg.scheduler.AddTask(0.3, SendArrowRight)\n\neg.globals.ArrowRelease = 0\neg.plugins.Window.SendKeys(u'{Right}', False)\neg.globals.ArrowTask = eg.scheduler.AddTask(0.5, SendArrowRight)")
             </Action>
         </Macro>
-        <Macro Name="Arrow Release" Expanded="True">
+        <Macro Name="Arrow Release">
             <Event Name="CommandFusion.DigitalRelease_22" />
             <Event Name="CommandFusion.DigitalRelease_23" />
             <Event Name="CommandFusion.DigitalRelease_24" />
@@ -170,7 +170,7 @@
                 </Action>
             </Macro>
         </Folder>
-        <Folder Name="Vol Down">
+        <Folder Name="Vol Down" Expanded="True">
             <Macro Name="Vol Down Starter">
                 <Event Name="CommandFusion.DigitalPress_18" />
                 <Action>
@@ -183,7 +183,7 @@
                     Timer.TimerAction(u'voldown', 4, 0, 0.29999999999999999, u'Vol Up', False, True, 1, u'00:00:00')
                 </Action>
             </Macro>
-            <Macro Name="Vol Down">
+            <Macro Name="Vol Down" Expanded="True">
                 <Event Name="Timer.Vol Down" />
                 <Action>
                     System.ChangeMasterVolumeBy(-4.0, 0)
@@ -193,10 +193,10 @@
                 </Action>
             </Macro>
         </Folder>
-        <Macro Name="Vol Level">
+        <Macro Name="Vol Level" Expanded="True">
             <Event Name="CommandFusion.AnalogChange_1" />
             <Action Name="Change Vol &amp; Reply">
-                EventGhost.PythonScript(u'eg.plugins.System.SetMasterVolume((float(eg.event.payload) / 65535) * 100, 0)\neg.plugins.CommandFusion.AnalogChange(1, eg.event.payload)\neg.plugins.CommandFusion.SerialChange(1, str(int((float(eg.event.payload) / 65535) * 100)) + "%")')
+                EventGhost.PythonScript(u'#eg.plugins.System.SetMasterVolume((float(eg.event.payload) / 65535) * 100, 0)\neg.plugins.CommandFusion.AnalogChange(1, eg.event.payload, 0, 100)\neg.plugins.CommandFusion.SerialChange(1, str(int((float(eg.event.payload) / 65535) * 100)) + "%")')
             </Action>
         </Macro>
         <Macro Name="Init">
@@ -205,10 +205,10 @@
                 EventGhost.TriggerEvent(u'SendVol', 0.0)
             </Action>
         </Macro>
-        <Macro Name="Send Volume Info">
+        <Macro Name="Send Volume Info" Expanded="True">
             <Event Name="Main.SendVol" />
             <Action Name="Reply Current Vol">
-                EventGhost.PythonScript(u'currentVol = int(eg.plugins.System.ChangeMasterVolumeBy(0.0, 0))\neg.plugins.CommandFusion.AnalogChange(1, (65535/100) * currentVol)\neg.plugins.CommandFusion.SerialChange(1, str(currentVol) + "%")')
+                EventGhost.PythonScript(u'currentVol = str(eg.plugins.System.ChangeMasterVolumeBy(0.0, 0))\neg.plugins.CommandFusion.AnalogChange(1, currentVol, 0, 100)\neg.plugins.CommandFusion.SerialChange(1, str(int(round(float(currentVol)))) + "%")')
             </Action>
         </Macro>
     </Folder>
