@@ -187,6 +187,32 @@ class SerialChange(eg.ActionBase):
         while panel.Affirmed():
             panel.SetResult(textCtrl.GetValue(), valCtrl.GetValue())
 
+# SOCKET SEND ACTION
+class SocketSend(eg.ActionBase):
+    name = "Socket Send"
+    iconFile = "icon_orange"
+    description = (
+        "Send a raw string value direct to the TCP socket."
+    )
+    class text:
+        value = "String Value:"
+        
+    def __call__(self, Value):
+        val = eg.ParseString(Value)
+        self.plugin.Push("%s" % (val))
+               
+            
+    def Configure(self, Value="l1=0x\x03"):
+        panel = eg.ConfigPanel()
+        st1 = panel.StaticText(self.text.value)
+        valCtrl = panel.TextCtrl(Value)
+        mySizer = wx.FlexGridSizer(rows=5)
+        mySizer.Add(st1, 0, wx.EXPAND|wx.ALL, 5)
+        mySizer.Add(valCtrl, 0, wx.EXPAND|wx.ALL, 5)
+        panel.sizer.Add(mySizer)
+        while panel.Affirmed():
+            panel.SetResult(valCtrl.GetValue())
+
 class ServerSession(asynchat.async_chat):
    
     def __init__ (self, sock, addr, password, plugin, server_ref):
@@ -343,6 +369,7 @@ class CommandFusion(eg.PluginBase):
         self.AddAction(DigitalRelease)
         self.AddAction(AnalogChange)
         self.AddAction(SerialChange)
+        self.AddAction(SocketSend)
 
                             
     def __start__(self, port, password, logMessages):
@@ -375,7 +402,9 @@ class CommandFusion(eg.PluginBase):
                 print("CommandFusion Message sent: " + eg.ParseString(data))
             return True
         except Exception, exc:
-            raise self.Exception(exc[1])
+            if self.logMessages:
+                print("CommandFusion Message could not be sent: " + eg.ParseString(data))
+            #raise self.Exception(exc[1])
 
 
     def Configure(self, port=8020, password="", logMessages=True): 
