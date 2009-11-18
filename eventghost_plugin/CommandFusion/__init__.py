@@ -53,7 +53,11 @@ import asynchat
 import asyncore
 import socket
 
-
+def String2hex(string):
+    tmp=[]
+    for char in string:
+        tmp.append("\\x%02X" % ord(char))
+    return ''.join(tmp)
 
 # DIGITAL PRESS ACTION
 class DigitalPress(eg.ActionBase):
@@ -126,7 +130,7 @@ class AnalogChange(eg.ActionBase):
         
     def __call__(self, joinNum, Value="0", minVal="0", maxVal="65535"):
         val = eg.ParseString(Value)
-        val = str(round(float(65535 / float(maxVal) - float(minVal)) * float(val)))
+        val = int(float(65535) / (float(maxVal) - float(minVal)) * float(val))
         self.plugin.Push("a%s=%s\x03" % (joinNum, val))
                
             
@@ -187,6 +191,7 @@ class SerialChange(eg.ActionBase):
         while panel.Affirmed():
             panel.SetResult(textCtrl.GetValue(), valCtrl.GetValue())
 
+
 # SOCKET SEND ACTION
 class SocketSend(eg.ActionBase):
     name = "Socket Send"
@@ -196,13 +201,15 @@ class SocketSend(eg.ActionBase):
     )
     class text:
         value = "String Value:"
+
         
     def __call__(self, Value):
-        val = eg.ParseString(Value)
-        self.plugin.Push("%s" % (val))
-               
+        val = Value.decode('string_escape')
+        val = eg.ParseString(val)
+        self.plugin.Push(val)
+
             
-    def Configure(self, Value="l1=0x\x03"):
+    def Configure(self, Value="l1=0x\\x03"):
         panel = eg.ConfigPanel()
         st1 = panel.StaticText(self.text.value)
         valCtrl = panel.TextCtrl(Value)
@@ -212,6 +219,8 @@ class SocketSend(eg.ActionBase):
         panel.sizer.Add(mySizer)
         while panel.Affirmed():
             panel.SetResult(valCtrl.GetValue())
+
+
 
 class ServerSession(asynchat.async_chat):
    
@@ -302,7 +311,26 @@ class ServerSession(asynchat.async_chat):
             joinNum = line[1:equalsPos]
             joinVal = line[equalsPos+1:]
             self.plugin.TriggerEvent("SerialChange_%s" % (joinNum,), joinVal)
-
+        elif line[0] == "l":
+            # List event, eg. l1:4:d1=1
+            colonPos = line.find(':')
+            listJoinNum = line[1:colonPos]
+            nextColonPos = line.find(':', colonPos + 1)
+            itemNum = line[colonPos+1:nextColonPos]
+            signalType = line[nextColonPos+1:nextColonPos+2]
+            equalsPos = line.find('=')
+            joinNum = line[nextColonPos+2:equalsPos]
+            joinVal = line[equalsPos+1:]
+            #print("listJoin: " + listJoinNum + ", itemNum: " + itemNum + ", signalType: " + signalType + ", joinNum: " + joinNum + ", joinVal: " + joinVal)
+            if signalType == "d" :
+                if joinVal == "1" :
+                    self.plugin.TriggerEvent("ListDigitalPress_%s_%s" % (listJoinNum,joinNum), itemNum)
+                else:
+                    self.plugin.TriggerEvent("ListDigitalRelease_%s_%s" % (listJoinNum,joinNum), itemNum)
+            if signalType == "a" :
+                self.plugin.TriggerEvent("ListAnalogChange_%s_%s" % (listJoinNum,joinNum), itemNum, joinVal)
+            if signalType == "s" :
+                self.plugin.TriggerEvent("ListSerialChange_%s_%s" % (listJoinNum,joinNum), itemNum, joinVal)
 
     def SendData(self, data):
         try:
