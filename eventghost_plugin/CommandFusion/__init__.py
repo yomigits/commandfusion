@@ -397,7 +397,7 @@ class CommandFusion(eg.PluginBase):
             self.dispatcher = Server(self.port, self.password, self)
             self.isDispatcherRunning = True
         try:
-            self.dispatcher.session.sendall(data)
+            self.dispatcher.session.sendall(eg.ParseString(data))
             if self.logMessages:
                 print("CommandFusion Message sent: " + eg.ParseString(data))
             return True
