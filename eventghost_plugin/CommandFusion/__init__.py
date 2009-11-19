@@ -172,6 +172,7 @@ class SerialChange(eg.ActionBase):
         value = "Serial Value:"
         
     def __call__(self, joinNum, Value):
+        Value = eg.ParseString(Value)
         self.plugin.Push("s%s=%s\x03" % (joinNum, Value))
                
             
