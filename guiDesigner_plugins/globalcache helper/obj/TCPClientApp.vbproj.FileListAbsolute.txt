@@ -1,8 +1,0 @@
-C:\Work\GuiLink\TCPClientApp\TCPClientApp\bin\Debug\TCPClientApp.exe.config
-C:\Work\GuiLink\TCPClientApp\TCPClientApp\obj\Debug\TCPClientApp.exe
-C:\Work\GuiLink\TCPClientApp\TCPClientApp\obj\Debug\TCPClientApp.xml
-C:\Work\GuiLink\TCPClientApp\TCPClientApp\obj\Debug\TCPClientApp.pdb
-C:\Work\GuiLink\Products\CommandFusion\GCHelper\bin\Debug\TCPClientApp.exe.config
-C:\Work\GuiLink\Products\CommandFusion\GCHelper\obj\Debug\TCPClientApp.exe
-C:\Work\GuiLink\Products\CommandFusion\GCHelper\obj\Debug\TCPClientApp.xml
-C:\Work\GuiLink\Products\CommandFusion\GCHelper\obj\Debug\TCPClientApp.pdb
