@@ -1,7 +1,7 @@
 /*
 System Name: CommandFusion iViewer Server
 Programmer: CommandFusion
-Version: 4.2
+Version: 4.3
 Comments:  www.commandfusion.com
 */
 
@@ -10,7 +10,7 @@ Please refer to the 'CommandFusion iViewer Crestron Module' PDF packaged with th
 The User Guide PDF can also be obtained from our website - http://www.commandfusion.com/downloads
 #HELP_END
 
-#SYMBOL_NAME "CommandFusion iViewer Server v4.2"
+#SYMBOL_NAME "CommandFusion iViewer Server v4.3"
 #CATEGORY "46" "iPhone / iPod Touch" // Custom
 #DEFAULT_VOLATILE
 #ENABLE_STACK_CHECKING
@@ -121,7 +121,7 @@ FUNCTION SendFeedback(STRING theMsg, INTEGER containsListData) {
 			Debug = "Error sending to iViewer: " + ITOA(status);
 			DebugLogLine(Debug);
 		}
-	} ELSE {
+	} ELSE IF (DebugMode) {
 		Trace("Cannot send when socket status = %d", CommandServer.SocketStatus);
 	}
 }
@@ -263,18 +263,22 @@ CHANGE an_fb {
 }
 
 CHANGE text_o {
-	INTEGER index;
-	STRING Response[255];
+    INTEGER index;
+    STRING Response[255];
 
-	index = GetLastModifiedArrayIndex();
-	if (text_o[index] = "") {
-		Response = "s" + ITOA(index) + "= \x03";
-		text_o_store[index] = " ";
-	} else {	 
-		Response = "s" + ITOA(index) + "=" + text_o[index] + "\x03";
-		text_o_store[index] = text_o[index];
-	}
-	SendFeedback(Response, 0);
+    index = GetLastModifiedArrayIndex();
+    if (text_o[index] = "") {
+        Response = "s" + ITOA(index) + "= \x03";
+        text_o_store[index] = " ";
+    } else {
+        While (len(text_o[index]) > 200) {
+        	Response = "s" + ITOA(index) + "=" + GatherByLength(200, text_o[index]) + "\x03";
+        	SendFeedback(Response, 0);
+        }
+        text_o_store[index] = text_o[index];
+        Response = "s" + ITOA(index) + "=" + text_o[index] + "\x03";
+    }
+    SendFeedback(Response, 0);
 }
 
 CHANGE list_tx$ {
