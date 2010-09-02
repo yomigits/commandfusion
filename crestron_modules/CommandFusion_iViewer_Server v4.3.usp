@@ -48,7 +48,7 @@ INTEGER_PARAMETER Port, ActivityTimeoutAmount;
 
 TCP_SERVER CommandServer[9999];
 
-String Debug[255], text_o_store[240][255];
+String Debug[999], text_o_store[240][255];
 Integer AccessGranted;
 
 FUNCTION DebugLogLine(String msg) {
