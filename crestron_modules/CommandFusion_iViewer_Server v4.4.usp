@@ -58,7 +58,7 @@ INTEGER_PARAMETER Port, ActivityTimeoutAmount;
 TCP_SERVER CommandServer[SOCKETLEN];
 
 String Debug[999], text_o_store[NUMSERIAL][STRINGLEN], incomingBuffer[9999];
-Integer AccessGranted, ProcessingIncoming; 
+Integer AccessGranted, Processing; 
 INTEGER Semaphore;
 
 FUNCTION DebugLogLine(String msg) {
@@ -73,9 +73,11 @@ FUNCTION SendFeedback(STRING theMsg, INTEGER containsListData) {
 
 	// Wait for any list data being sent to finish sending so we dont interrupt it
 	// (list data can be quite long and require sending a few packets)
-	while (UpdatingList && !containsListData) {
+	while (UpdatingList && !containsListData || Processing) {
 		ProcessLogic();
 	}
+	
+	Processing = 1;
 
 	if (CommandServer.SocketStatus = 2) {
 		status = SocketSend(CommandServer, theMsg);
@@ -90,6 +92,8 @@ FUNCTION SendFeedback(STRING theMsg, INTEGER containsListData) {
 	} else if (DebugMode) {
 		Trace("Cannot send when socket status = %d", CommandServer.SocketStatus);
 	}
+	
+	Processing = 0;
 }
 
 Function InitializeFeedback() {
@@ -391,37 +395,25 @@ SOCKETCONNECT CommandServer {
 }
 
 SOCKETRECEIVE CommandServer {
-	//STRING msgReceived[1024], temp[255];
 
-	PULSE(50, ReceivedData);
-	if (Offline = 1) {
-    	Offline = 0;
-    }
-	RETIMEWAIT(ActivityTimeoutAmount * 100, ActivityWatcher);
-                  
-	//msgReceived = CommandServer.SocketRxBuf;
+	Processing = 1;
+
 	incomingBuffer = incomingBuffer + CommandServer.SocketRxBuf;
+	Debug = "RECV: " + CommandServer.SocketRxBuf;
 	ClearBuffer(CommandServer.SocketRxBuf);
+	DebugLogLine(Debug);
 
 	Debug = "Current Buffer: " + incomingBuffer;
 	DebugLogLine(Debug);
 	
-	// Dont process this new data until all old data is processed
-	//While (ProcessingIncoming) {
-	//	ProcessLogic();
-	//}
-    
-    //ProcessingIncoming = 1;
-	//While (LEN(msgReceived) > 0) {
-//		temp = Remove("\x03", msgReceived); 
-//		temp = LEFT(temp, LEN(temp) - 1);
-//		if (LEN(temp) = 0) {
-//			break;
-//		} else {
-//			ProcessCommands(temp);
-//		}
-//	}
-	//ProcessingIncoming = 0;
+	PULSE(50, ReceivedData);
+	
+	if (Offline = 1) {
+    	Offline = 0;
+    }
+	RETIMEWAIT(ActivityTimeoutAmount * 100, ActivityWatcher);
+	
+	Processing = 0;
 }
 
 SOCKETDISCONNECT CommandServer {
@@ -455,7 +447,7 @@ Function Main() {
 	
 	WHILE (1) {
 		// DIRTY WAY TO ENSURE DATA IS PROCESSED AS IT COMES -IN ORDER-, THANKS TO CRESTRON WANTING TO TASK SWITCH WHENEVER IT FEELS LIKE IT
-		IF (LEN(incomingBuffer) > 0) {
+		WHILE (LEN(incomingBuffer) > 0) {
 			temp = Remove("\x03", incomingBuffer);
 			temp = LEFT(temp, LEN(temp) - 1);
 			if (LEN(temp) > 0) {
