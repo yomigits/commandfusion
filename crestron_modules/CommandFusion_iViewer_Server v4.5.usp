@@ -1,7 +1,7 @@
 /*
 System Name: CommandFusion iViewer Server
 Programmer: CommandFusion
-Version: 4.4
+Version: 4.5
 Comments:  www.commandfusion.com
 */
 
@@ -10,7 +10,7 @@ Please refer to the 'CommandFusion iViewer Crestron Module' PDF packaged with th
 The User Guide PDF can also be obtained from our website - http://www.commandfusion.com/downloads
 #HELP_END
 
-#SYMBOL_NAME "CommandFusion iViewer Server v4.4"
+#SYMBOL_NAME "CommandFusion iViewer Server v4.5"
 #CATEGORY "46" "iPhone / iPod Touch" // Custom
 #DEFAULT_VOLATILE
 #ENABLE_STACK_CHECKING
@@ -57,7 +57,7 @@ INTEGER_PARAMETER Port, ActivityTimeoutAmount;
 
 TCP_SERVER CommandServer[SOCKETLEN];
 
-String Debug[999], text_o_store[NUMSERIAL][STRINGLEN], incomingBuffer[9999];
+String Debug[999], text_o_store[NUMSERIAL][STRINGLEN];
 Integer AccessGranted, Processing; 
 INTEGER Semaphore;
 
@@ -394,28 +394,6 @@ SOCKETCONNECT CommandServer {
 	}
 }
 
-SOCKETRECEIVE CommandServer {
-
-	Processing = 1;
-
-	incomingBuffer = incomingBuffer + CommandServer.SocketRxBuf;
-	Debug = "RECV: " + CommandServer.SocketRxBuf;
-	ClearBuffer(CommandServer.SocketRxBuf);
-	DebugLogLine(Debug);
-
-	Debug = "Current Buffer: " + incomingBuffer;
-	DebugLogLine(Debug);
-	
-	PULSE(50, ReceivedData);
-	
-	if (Offline = 1) {
-    	Offline = 0;
-    }
-	RETIMEWAIT(ActivityTimeoutAmount * 100, ActivityWatcher);
-	
-	Processing = 0;
-}
-
 SOCKETDISCONNECT CommandServer {
 	SIGNED_INTEGER status;
 	Integer i;
@@ -446,14 +424,13 @@ Function Main() {
 	Offline = 1;
 	
 	WHILE (1) {
-		// DIRTY WAY TO ENSURE DATA IS PROCESSED AS IT COMES -IN ORDER-, THANKS TO CRESTRON WANTING TO TASK SWITCH WHENEVER IT FEELS LIKE IT
-		WHILE (LEN(incomingBuffer) > 0) {
-			temp = Remove("\x03", incomingBuffer);
-			temp = LEFT(temp, LEN(temp) - 1);
-			if (LEN(temp) > 0) {
-				ProcessCommands(temp);
-			}
-		}		                                                                                        
-		ProcessLogic();
+		temp = gather("\x03",CommandServer.SocketRxBuf);
+		debugLogLine("new command gathered");
+		RETIMEWAIT(ActivityTimeoutAmount * 100, ActivityWatcher);
+		temp = left(temp, Len(temp) - 1);
+		if (len(temp) > 0) {
+			ProcessCommands(temp);
+		}
+		delay(5);
 	}
 }

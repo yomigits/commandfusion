@@ -20,8 +20,8 @@
 [BEGIN]
   ObjTp=Symbol
   Exclusions=1,19,20,21,88,89,167,168,179,216,225,248,249,266,310,718,756,854,
-  Name=CommandFusion iViewer Server v4.4
-  SmplCName=CommandFusion_iViewer_Server v4.4.usp
+  Name=CommandFusion iViewer Server v4.5
+  SmplCName=CommandFusion_iViewer_Server v4.5.usp
   Code=1
   SysRev5=4.000
   SMWRev=2.02.05
@@ -543,7 +543,7 @@
   SmplCOutputCue1=i#
   SmplCInputList2Cue1=an#
   SmplCOutputList2Cue1=ai#
-  SPlus2CompiledName=S2_CommandFusion_iViewer_Server_v4_4
+  SPlus2CompiledName=S2_CommandFusion_iViewer_Server_v4_5
   SymJam=NonExclusive
 [END]
 [BEGIN]
